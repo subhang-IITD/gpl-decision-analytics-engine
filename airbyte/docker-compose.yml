@@ -1,0 +1,62 @@
+# Self-hosted Airbyte for GPL's structured-source ingestion (brief 5.2).
+#
+# Airbyte is open-source with no per-row pricing. It runs on GPL's own cloud
+# (Docker / Kubernetes), so no data leaves GPL's environment. This compose file
+# is the minimal self-hosted stack; for production GPL should use `abctl` or the
+# Airbyte Helm chart on EKS. Requires Docker — run on the GPL AWS host, not a
+# laptop without Docker.
+#
+# Usage (on a Docker-capable host):
+#   docker compose -f airbyte/docker-compose.yml up -d
+#   open http://localhost:8000  (Airbyte UI) and configure sources from
+#   airbyte/connectors.md
+#
+# NOTE: pin to the current Airbyte platform version your GPL ops team approves.
+version: "3.8"
+
+services:
+  init:
+    image: airbyte/init:0.63.8
+    command: /bin/sh -c "./scripts/create_mount_directories.sh /local_parent /tmp /tmp/airbyte_local"
+    environment:
+      - LOCAL_ROOT=/tmp/airbyte_local
+      - HACK_LOCAL_ROOT_PARENT=/tmp
+    volumes:
+      - /tmp:/local_parent
+
+  db:
+    image: airbyte/db:0.63.8
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${AIRBYTE_DB_USER:-docker}
+      - POSTGRES_PASSWORD=${AIRBYTE_DB_PASSWORD:-docker}
+      - POSTGRES_DB=airbyte
+    volumes:
+      - airbyte_db:/var/lib/postgresql/data
+
+  server:
+    image: airbyte/server:0.63.8
+    restart: unless-stopped
+    depends_on: [db, init]
+    environment:
+      - DATABASE_USER=${AIRBYTE_DB_USER:-docker}
+      - DATABASE_PASSWORD=${AIRBYTE_DB_PASSWORD:-docker}
+      - DATABASE_URL=jdbc:postgresql://db:5432/airbyte
+      - WORKSPACE_ROOT=/tmp/workspace
+      - LOCAL_ROOT=/tmp/airbyte_local
+    volumes:
+      - workspace:/tmp/workspace
+      - /tmp/airbyte_local:/tmp/airbyte_local
+    ports: ["8001:8001"]
+
+  webapp:
+    image: airbyte/webapp:0.63.8
+    restart: unless-stopped
+    depends_on: [server]
+    ports: ["8000:80"]
+    environment:
+      - INTERNAL_API_HOST=server:8001
+
+volumes:
+  airbyte_db:
+  workspace:

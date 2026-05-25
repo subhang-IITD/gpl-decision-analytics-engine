@@ -1,0 +1,38 @@
+# Secrets -- never commit
+.env
+.env.*
+!.env.example
+*.pem
+*credentials*.json
+
+# Local data warehouse (SQLite fallback) & generated artefacts.
+# Ignore everything in _data EXCEPT the bundled read-only demo DB
+# (PropEquity market data only, no GPL-internal records). The demo.db is
+# force-added; the rules below keep working/real DBs out.
+_data/gpl.db
+_data/*.sqlite3
+_data/*.bak
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Airflow local state
+airflow/logs/
+airflow/airflow.db
+airflow/airflow.cfg
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Never commit source Excel dropped into _data by the uploader
+_data/*.xlsx

@@ -1,0 +1,20 @@
+# Lean dependency set for Streamlit Community Cloud (demo deployment).
+# Excludes heavy/optional packages (playwright, scrapy, xgboost) -- the code
+# degrades gracefully without them: scraping is off on the demo, and the price
+# model falls back from XGBoost to scikit-learn GradientBoosting automatically.
+streamlit==1.41.1
+pandas==2.2.3
+numpy==2.2.1
+scipy==1.15.0
+scikit-learn==1.6.0
+SQLAlchemy==2.0.36
+plotly==5.24.1
+pydeck==0.9.1
+python-dateutil==2.9.0.post0
+requests==2.32.3
+feedparser==6.0.11
+openpyxl==3.1.5
+# FastAPI stack (so the API can also run if desired)
+fastapi==0.115.6
+uvicorn==0.34.0
+pydantic==2.10.4
